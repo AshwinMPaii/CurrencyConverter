@@ -32,6 +32,7 @@ struct ExchangeInfo: View {
                     .clipShape(.buttonBorder)
                     
                 //Rates
+                ExtractedView(leftImage: .platinumpenny, rightImage: .goldpenny, leftText: "0.25 Platinum Penny", rightText: "1 Gold Piece")
                 ExtractedView(leftImage: .goldpiece, rightImage: .goldpenny, leftText: "1 Gold Piece", rightText: "4 Gold Pennies")
                 ExtractedView(leftImage: .goldpenny, rightImage: .silverpiece, leftText: "1 Gold Penny", rightText: "4 Silver Pieces")
                 ExtractedView(leftImage: .silverpiece, rightImage: .silverpenny, leftText: "1 Silver Piece", rightText: "4 Silver Pennies")

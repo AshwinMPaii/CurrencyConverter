@@ -9,8 +9,8 @@ import SwiftUI
 
 struct SelectCurrency: View {
     @Environment(\.dismiss) var dismiss
-    @State var selectedCurrency: Currency
-    @State var convertToCurrency: Currency
+    @Binding var topCurrency: Currency
+    @Binding var bottomCurrency: Currency
     
     var body: some View {
         ZStack {
@@ -24,24 +24,7 @@ struct SelectCurrency: View {
                 Text("Select the currecny you are starting with:")
                     .fontWeight(.bold)
                 
-                LazyVGrid(columns: [GridItem(), GridItem(), GridItem()]) {
-                    ForEach(Currency.allCases) { currency in
-                        if selectedCurrency == currency {
-                            CurrencyIcon(currencyImage: currency.image, currencyName: currency.text)
-                                .shadow(color: .black, radius: 10)
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 25)
-                                        .stroke(lineWidth: 3)
-                                        .opacity(0.5)
-                                }
-                        } else {
-                            CurrencyIcon(currencyImage: currency.image, currencyName: currency.text)
-                                .onTapGesture {
-                                    self.selectedCurrency = currency
-                                }
-                        }
-                    }
-                }
+                IconGrid(selectedCurrency: $topCurrency)
                 
                 Spacer()
                 
@@ -50,24 +33,7 @@ struct SelectCurrency: View {
                     .fontWeight(.bold)
                 
                 //Currency icons
-                LazyVGrid(columns: [GridItem(), GridItem(), GridItem()]) {
-                    ForEach(Currency.allCases) { currency in
-                        if convertToCurrency == currency {
-                            CurrencyIcon(currencyImage: currency.image, currencyName: currency.text)
-                                .shadow(color: .black, radius: 10)
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 25)
-                                        .stroke(lineWidth: 3)
-                                        .opacity(0.5)
-                                }
-                        } else {
-                            CurrencyIcon(currencyImage: currency.image, currencyName: currency.text)
-                                .onTapGesture {
-                                    self.convertToCurrency = currency
-                                }
-                        }
-                    }
-                }
+                IconGrid(selectedCurrency: $bottomCurrency)
                 
                 //Done
                 
@@ -86,6 +52,8 @@ struct SelectCurrency: View {
     }
 }
 
-#Preview {
-    SelectCurrency(selectedCurrency: .silverPiece, convertToCurrency: .goldPiece)
-}
+//#Preview {
+//    @Previewable @State var topCurrency: Currency = .silverPenny
+//    @Previewable @State var bottomCurrency: Currency = .goldPiece
+//    SelectCurrency(topCurrency: $topCurrency, bottomCurrency: $bottomCurrency)
+//}

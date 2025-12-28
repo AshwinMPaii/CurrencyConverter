@@ -6,17 +6,59 @@
 //
 
 import SwiftUI
+import TipKit
 
 struct ContentView: View {
     @State var showExchangeInfo = false
+    @State var showSelectCurrency = false
+    
+    @State var leftCurrency: Currency = .silverPenny
+    
+    @State var rightCurrency: Currency = .goldPenny
+    
+    func saveCurrency() {
+        let defaults = UserDefaults.standard
+        defaults.set(leftCurrency.rawValue, forKey: "leftCurrency")
+        defaults.set(rightCurrency.rawValue, forKey: "rightCurrency")
+    }
+    
+    func loadCurrency() {
+        let defaults = UserDefaults.standard
+        
+        // 1. Get the doubles from storage
+        let leftRaw = defaults.double(forKey: "leftCurrency")
+        let rightRaw = defaults.double(forKey: "rightCurrency")
+        
+        // 2. Convert back to Enum (only if they exist/are valid)
+        if let left = Currency(rawValue: leftRaw) {
+            leftCurrency = left
+        }
+        if let right = Currency(rawValue: rightRaw) {
+            rightCurrency = right
+        }
+    }
+    
+    func dismissKeyboard() {
+        leftTyping = false
+        rightTyping = false
+    }
+    
+    @FocusState var leftTyping
+    @FocusState var rightTyping
+    
     @State var leftAmount = ""
     @State var rightAmount = ""
+    
+    var currencyTip = CurrencyTip()
     
     var body: some View {
         ZStack {
             Image(.background)
                 .resizable()
                 .ignoresSafeArea()
+                .onTapGesture {
+                    dismissKeyboard()
+                }
             VStack {
                 //prancing pony image
                 Image(.prancingpony)
@@ -36,22 +78,27 @@ struct ContentView: View {
                         //upper section
                         HStack {
                             //input currency image
-                            Image(.silverpiece)
+                            Image(leftCurrency.image)
                                 .resizable()
                                 .scaledToFit()
                                 .frame(height: 33)
                             
                             //input currency text
-                            Text("Silver Piece")
-                                .font(.title2)
+                            Text(leftCurrency.text)
+                                .font(.title3)
                                 .foregroundStyle(.white)
-                            
+                
                         }
                         .padding(.bottom, -1)
+                        .onTapGesture {
+                            showSelectCurrency.toggle()
+                            currencyTip.invalidate(reason: .actionPerformed)
+                        }
+                        .popoverTip(currencyTip, arrowEdge: .bottom)
                         //input text field
                         TextField("Amount", text: $leftAmount)
                             .textFieldStyle(.roundedBorder)
-                            //.padding()
+                            .focused($leftTyping)
                         
                     }
                     
@@ -66,22 +113,27 @@ struct ContentView: View {
                         //upper section
                         HStack {
                             //output currency image
-                            Image(.goldpenny)
+                            Image(rightCurrency.image)
                                 .resizable()
                                 .scaledToFit()
                                 .frame(height: 33)
                             
                             //output currency text
-                            Text("Gold Piece")
-                                .font(.title2)
+                            Text(rightCurrency.text)
+                                .font(.title3)
                                 .foregroundStyle(.white)
                             
                         }
                         .padding(.bottom, -1)
+                        .onTapGesture {
+                            showSelectCurrency.toggle()
+                            currencyTip.invalidate(reason: .actionPerformed)
+                        }
+                        
                         //output text field
                         TextField("Amount", text: $rightAmount)
                             .textFieldStyle(.roundedBorder)
-                            //.padding()
+                            .focused($rightTyping)
                     }
                 }
                 .padding()
@@ -103,16 +155,43 @@ struct ContentView: View {
                             .foregroundStyle(.white)
                     }
                     .padding(.trailing)
-                    .sheet(isPresented: $showExchangeInfo) {
-                        ExchangeInfo()
-                    }
                 }
                 
             }
+        }
+        .task {
+            try? Tips.configure()
+        }
+        .onAppear {
+            loadCurrency() // Loads the saved currency when the app opens
+        }
+        .onChange(of: leftAmount) {
+            if leftTyping {
+                rightAmount = leftCurrency.convert(leftAmount, to: rightCurrency)
+            }
+        }
+        .onChange(of: rightAmount) {
+            if rightTyping {
+                leftAmount = rightCurrency.convert(rightAmount, to: leftCurrency)
+            }
+        }
+        .onChange(of: leftCurrency) {
+            saveCurrency()
+            leftAmount = rightCurrency.convert(rightAmount, to: leftCurrency)
+        }
+        .onChange(of: rightCurrency) {
+            saveCurrency()
+            rightAmount = leftCurrency.convert(leftAmount, to: rightCurrency)
+        }
+        .sheet(isPresented: $showExchangeInfo) {
+            ExchangeInfo()
+        }
+        .sheet(isPresented: $showSelectCurrency) {
+            SelectCurrency(topCurrency: $leftCurrency, bottomCurrency: $rightCurrency)
         }
     }
 }
 
 #Preview {
-    ContentView()
+    ContentView(leftCurrency: .silverPenny, rightCurrency: .goldPenny)
 }
